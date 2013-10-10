@@ -1,0 +1,14 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    anbt-sql-formatter (0.0.1)
+    colorize (0.6.0)
+    mysql2 (0.3.13)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  anbt-sql-formatter
+  colorize
+  mysql2
