@@ -46,8 +46,16 @@ class Formatter
     if q
       @query << "Query:"
       @query << ""
-      @query << formatter.format(q).split("\n")
-      @query.flatten!
+      formatter.format(q).split("\n").each do |row|
+        if row.length < 200
+          @query << row
+        else
+          row.scan(/.{1,200}\W/).each do |r|
+            @query << r
+          end
+        end
+      end
+      #@query.flatten!
     end
   end
 
@@ -55,10 +63,14 @@ class Formatter
     total_width = [@names.length, @datas.length, @query.length].max
     (0...total_width).each do |i|
       print ("%20s" % @names[i]).yellow
-      print " : "
+      if @names[i] 
+        print " : "
+      else 
+        print "   "
+      end
       print ("%-20s" % @datas[i]).green
       print " | "
-      print ("%s" % @query[i]).blue
+      print ("%-200s" % @query[i]).blue
       print "\n"
     end
     puts
