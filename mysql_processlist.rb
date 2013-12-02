@@ -30,6 +30,7 @@ class Formatter
     @names = []
     @datas = []
     @query = []
+    @buffer = ""
   end
 
   def humanize_sec(secs)
@@ -59,68 +60,75 @@ class Formatter
     end
   end
 
-  def print_table
+  def table
     total_width = [@names.length, @datas.length, @query.length].max
     (0...total_width).each do |i|
-      print ("%20s" % @names[i]).yellow
+      @buffer << ("%20s" % @names[i]).yellow
       if @names[i] 
-        print " : "
+        @buffer << " : "
       else 
-        print "   "
+        @buffer << "   "
       end
-      print ("%-20s" % @datas[i]).green
-      print " | "
-      print ("%-200s" % @query[i]).blue
-      print "\n"
+      @buffer << ("%-20s" % @datas[i]).green
+      @buffer << " | "
+      @buffer << ("%-200s" % @query[i]).blue
+      @buffer << "\n"
     end
-    puts
+    @buffer << "\n"
+    @buffer
   end
 end
 
-puts "Active Mysql processes:".yellow
-puts
-
 db = Database.new('development')
 
-db.processlist.each do |row|
+loop do
+  puts "\e[H\e[2J"
+  puts "Active Mysql processes (#{Time.now.to_s.green})".yellow
+  puts
 
-  formatter = Formatter.new
-  
-  next if row['Command'] == 'Sleep'
-  next if row['Info'] == 'SHOW FULL PROCESSLIST'  
- 
-  formatter.query = row['Info'] if row['Info']  
+  db.processlist.each do |row|
 
-  if row['db']
-    formatter.names << "Database"
-    formatter.datas << row['db']
-  end
- 
-  if row['User']
-    formatter.names << "User"
-    formatter.datas << row['User']
-  end
-  
-  if row['Host']
-    formatter.names << "Host"
-    formatter.datas << row['Host']
-  end
-  
-  if row['State']
-    formatter.names << "State"
-    formatter.datas << row['State']
-  end
-  
-  if row['Time']
-    formatter.names << "Time"
-    formatter.datas << formatter.humanize_sec(row['Time'])
-  end
-  
-  if row['Command']
-    formatter.names << "Command"
-    formatter.datas << row['Command']
-  end
+    formatter = Formatter.new
 
-  formatter.print_table
+    #next if row['Command'] == 'Sleep'
+    #next if row['Info'] == 'SHOW FULL PROCESSLIST'  
+
+    formatter.query = row['Info'] if row['Info']  
+
+    if row['db'] && row['db'].length > 0
+      formatter.names << "Database"
+      formatter.datas << row['db']
+    end
+
+    if row['User'] && row['User'].length > 0
+      formatter.names << "User"
+      formatter.datas << row['User']
+    end
+
+    if row['Host'] && row['Host'].length > 0
+      formatter.names << "Host"
+      formatter.datas << row['Host']
+    end
+
+    if row['State'] && row['State'].length > 0
+      formatter.names << "State"
+      formatter.datas << row['State']
+    end
+
+    if row['Time'] && row['Time'] > 0
+      formatter.names << "Time"
+      formatter.datas << formatter.humanize_sec(row['Time'])
+    end
+
+    if row['Command'] && row['Command'].length > 0
+      formatter.names << "Command"
+      formatter.datas << row['Command']
+    end
+
+    puts formatter.table
+
+  end
+  
+  sleep 0.1
 
 end
